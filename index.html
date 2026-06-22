@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rebates Campo - Borrador Supervisor</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+:root{--bg:#f2f6fb;--card:#fff;--ink:#101828;--muted:#667085;--line:#d9e2f2;--blue:#1d4ed8;--red:#dc2626;--orange:#f59e0b;--green:#16a34a;--dark:#0f172a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}.app{max-width:1180px;margin:auto;padding:10px}
+.top{position:sticky;top:0;z-index:50;background:rgba(242,246,251,.96);backdrop-filter:blur(8px);padding:8px 0 10px;border-bottom:1px solid var(--line)}
+.title{display:flex;justify-content:space-between;gap:8px;align-items:center}h1{font-size:19px;margin:0;font-weight:900;letter-spacing:-.4px}.status{font-size:11px;color:var(--muted);margin-top:3px}
+.btn{border:0;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;background:var(--blue);color:white}.btn2{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;background:white;color:var(--ink)}
+.filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}select{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:white;font-size:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}.tab{border:1px solid var(--line);background:white;border-radius:14px;padding:10px;font-weight:900;text-align:center;cursor:pointer}.tab.active{background:var(--dark);color:white}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}.kpi{background:white;border:1px solid var(--line);border-radius:18px;padding:12px;min-height:96px;box-shadow:0 6px 20px rgba(15,23,42,.06);cursor:pointer}.kpi .label{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}.kpi .val{font-size:28px;font-weight:900;margin:7px 0}.kpi .sub{font-size:11px;color:var(--muted);font-weight:800}
+.kpi.red{border-left:5px solid var(--red)}.kpi.orange{border-left:5px solid var(--orange)}.kpi.green{border-left:5px solid var(--green)}.kpi.blue{border-left:5px solid var(--blue)}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:12px}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 6px 20px rgba(15,23,42,.05)}h2{font-size:15px;margin:0 0 8px;font-weight:900}
+.rankItem{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;border-bottom:1px solid #eef2f7;cursor:pointer}.rankName{font-weight:900}.rankMeta{font-size:11px;color:var(--muted);margin-top:2px}.rankNum{font-weight:900;color:#1e40af;text-align:right}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}.client{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 5px 18px rgba(15,23,42,.06)}.clientTop{display:flex;justify-content:space-between;gap:8px;align-items:start}.code{font-size:15px;font-weight:900;color:#1e40af}.name{font-size:14px;font-weight:900;line-height:1.25;margin-top:2px}.badge{font-size:10px;font-weight:900;border-radius:999px;padding:5px 8px;white-space:nowrap}.b-red{background:#fee2e2;color:#991b1b}.b-orange{background:#ffedd5;color:#9a3412}.b-green{background:#dcfce7;color:#166534}.b-blue{background:#dbeafe;color:#1e40af}.meta{font-size:12px;color:var(--muted);margin:8px 0}.nums{display:grid;grid-template-columns:1fr 1fr;gap:7px}.num{background:#f8fbff;border:1px solid #e5e7eb;border-radius:12px;padding:8px}.num small{display:block;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase}.num b{font-size:13px}.copy{margin-top:9px;width:100%;background:#16a34a}
+.whats{white-space:pre-wrap;background:#0b1220;color:white;border-radius:16px;padding:12px;font-size:12px;line-height:1.4;max-height:60vh;overflow:auto}.hidden{display:none}.footerBtn{width:100%;margin-top:10px}
+@media(max-width:900px){.app{padding:8px}.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}.title{align-items:flex-start}.cards{grid-template-columns:1fr}.kpi{min-height:auto}.kpi .val{font-size:25px}}
+</style>
+
+<style id="gestion-dia-css">
+.dayList{display:grid;gap:10px}
+.dayCard{background:white;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 5px 18px rgba(15,23,42,.06)}
+.dayTop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:8px}
+.daySeller{font-weight:900;color:#0f172a;font-size:15px}
+.dayMeta{font-size:11px;color:var(--muted);font-weight:800;margin-top:2px}
+.bars2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.barBox{background:#f8fbff;border:1px solid #e5e7eb;border-radius:14px;padding:9px}
+.barTitle{display:flex;justify-content:space-between;font-size:11px;font-weight:900;color:#475467;margin-bottom:6px}
+.track{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.fill{height:100%;border-radius:999px;background:#ef4444}
+.fill.mid{background:#f59e0b}.fill.good{background:#16a34a}
+.dayMoney{font-size:11px;color:#667085;margin-top:7px}
+@media(max-width:900px){.tabs{grid-template-columns:1fr 1fr}.bars2{grid-template-columns:1fr}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="title"><div><h1>REBATES CAMPO</h1><div id="status" class="status">Cargando reembolsos.csv...</div></div><button class="btn2" onclick="loadData()">🔄 Actualizar</button></div>
+    <div class="filters"><select id="fSupervisor"></select><select id="fVendedor"></select><select id="fDia"></select></div>
+  </div>
+  <div class="tabs"><div class="tab active" onclick="setTab('resumen',this)">📊 Resumen</div><div class="tab" onclick="setTab('clientes',this)">🎯 Oportunidades</div><div class="tab" onclick="setTab('whatsapp',this)">📲 WhatsApp</div><div class="tab" onclick="setTab('gestion',this)">📈 Gestión día</div></div>
+  <section id="resumen">
+    <div class="kpis">
+      <div class="kpi red" onclick="focusType('ganado_no_usado')"><div class="label">Ganó y no usó V</div><div id="kOpp" class="val">0</div><div class="sub">venta incremental</div></div>
+      <div class="kpi orange" onclick="focusType('cerca')"><div class="label">Cerca de ganar</div><div id="kCerca" class="val">0</div><div class="sub">desde 60% avance</div></div>
+      <div class="kpi green"><div class="label">Soles oportunidad</div><div id="kSolesOpp" class="val">S/0</div><div id="kPvta" class="sub">PVTA oportunidad: S/0</div></div>
+      <div class="kpi blue"><div class="label">Clientes únicos</div><div id="kClientes" class="val">0</div><div id="kClientesSub" class="sub">Oportunidad total gap: S/0</div></div>
+    </div>
+    <div class="grid"><div class="card"><h2>Ranking Supervisor</h2><div id="rankSupervisor"></div></div><div class="card"><h2>Ranking Vendedor</h2><div id="rankVendedor"></div></div></div>
+  </section>
+  <section id="clientes" class="hidden"><div class="card"><h2 id="clientTitle">Oportunidades inmediatas</h2><div id="clientCards" class="cards"></div><button class="btn2 footerBtn" onclick="showMore()">Ver más</button></div></section>
+  <section id="whatsapp" class="hidden"><div class="card"><h2>Resumen para WhatsApp</h2><div id="whatsText" class="whats"></div><button class="btn footerBtn" onclick="copyWhats()">Copiar resumen WhatsApp</button></div></section>
+
+  <section id="gestion" class="hidden">
+    <div class="card">
+      <h2>Gestión del Día por vendedor</h2>
+      <div class="status">Cerraron hoy = clientes no cerrados inicialmente donde PVTA >= gap inicial.</div>
+      <div id="gestionList" class="dayList" style="margin-top:10px"></div><button class="btn footerBtn" onclick="copyGestionDia()">📲 Copiar todos a WhatsApp</button>
+    </div>
+  </section>
+
+</div>
+<script>
+let DATA=[], FILTERED=[], CLIENTS=[], CURRENT_TYPE='ganado_no_usado', LIMIT=20;
+const C={supervisor:['grupoventas','Grupo Ventas','Grupo','Supervisor','Mesa','MESA'],vendedor:['Vendedor','Cod Vendedor','Codigo Vendedor','FuerzaVentas','FV'],cliente:['Cliente','Cod Cliente','Codigo Cliente','ClienteCodigo','COD CLIENTE'],nombre:['Nombre Cliente','Cliente Nombre','Nombre','Razon Social'],dia:['DiaDeSemana','Dia de Semana','Día de Semana','Dia','DIA'],cuota:['CUOTA REBATE','Cuota Rebate','Cuota','Plan'],avance:['AV REBATE','Avance Rebate','Avance','Venta'],gap:['FALTA REBATE','Falta Rebate','Gap','Falta'],pct:['%AVANCE','% Avance','Porcentaje avance','Avance %'],uso:['¿Usó la V?','Uso la V?','Usó la V?','Uso V','USO V','Uso'],pvta:['PVTA','Preventa','PREVENTA','Preventa Hoy']};
+function nk(s){return String(s||'').replace(/^\uFEFF/,'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[¿?]/g,'').replace(/[_\-./]+/g,' ').replace(/\s+/g,' ')}
+function pick(r,a){let keys=Object.keys(r||{}),m={};keys.forEach(k=>m[nk(k)]=r[k]);for(let x of a){let v=m[nk(x)];if(v!==undefined&&String(v).trim()!=='')return v}return''}
+function num(x){if(x==null||x==='')return 0;if(typeof x==='number')return x;let s=String(x).trim().replace(/S\/|\s/g,'').replace(/[^\d,.\-]/g,'');if(!s)return 0;let c=s.includes(','),d=s.includes('.');if(c&&d){if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'')}else if(c||d){let sep=d?'.':',';let i=s.lastIndexOf(sep),before=s.slice(0,i),after=s.slice(i+1);if(after.length===3&&before.length<=3)s=before+after;else s=before+'.'+after}let n=parseFloat(s);return isNaN(n)?0:n}
+function uso(x){let s=String(x||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();return ['SI','S','1','TRUE','X','USO','USADO','CANJEADO'].includes(s)||s.includes('SI')||s.includes('USO')||s.includes('CANJE')}
+function mapRow(r){let cuota=num(pick(r,C.cuota)),avance=num(pick(r,C.avance)),gapRaw=pick(r,C.gap);let gap=String(gapRaw).trim()===''?Math.max(0,cuota-avance):num(gapRaw);let pct=num(pick(r,C.pct));if(pct>3)pct=pct/100;if(!pct&&cuota)pct=avance/cuota;return{supervisor:String(pick(r,C.supervisor)).trim(),vendedor:String(pick(r,C.vendedor)).trim(),cliente:String(pick(r,C.cliente)).trim(),nombre:String(pick(r,C.nombre)).trim(),dia:String(pick(r,C.dia)).trim(),cuota,avance,gap,pct,pvta:num(pick(r,C.pvta)),uso_v:uso(pick(r,C.uso))?'SI':'NO'}}
+function money(n){return 'S/'+Math.round(n||0).toLocaleString('es-PE')}
+function won(x){return x.cuota>0&&(x.pct>=1||x.avance>=x.cuota)}
+function typeOf(x){let w=won(x),u=x.uso_v==='SI';if(w&&!u)return'ganado_no_usado';if(w&&u)return'ganado_usado';if(!w&&x.pct>=.8&&x.pct<1)return'cerca';return'lejos'}
+function uniqueClients(rows){let m=new Map();rows.forEach(r=>{let k=r.cliente||r.nombre;if(!m.has(k))m.set(k,{...r,supervisor:new Set(),vendedor:new Set(),dia:new Set(),pvta:0,uso_v:false});let x=m.get(k);x.supervisor.add(r.supervisor);x.vendedor.add(r.vendedor);x.dia.add(r.dia);x.cuota=Math.max(x.cuota,r.cuota);x.avance=Math.max(x.avance,r.avance);x.pct=Math.max(x.pct,r.pct);x.gap=Math.max(0,x.cuota-x.avance);x.pvta+=r.pvta;x.uso_v=x.uso_v||r.uso_v==='SI'});return[...m.values()].map(x=>({...x,supervisor:[...x.supervisor].join(', '),vendedor:[...x.vendedor].join(', '),dia:[...x.dia].join(', '),uso_v:x.uso_v?'SI':'NO'}))}
+function fillSelect(id,vals){let el=document.getElementById(id),cur=el.value||'Todos';let arr=['Todos',...Array.from(new Set(vals.filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'))];el.innerHTML=arr.map(x=>`<option>${x}</option>`).join('');el.value=arr.includes(cur)?cur:'Todos'}
+function applyFilters(){let s=fSupervisor.value||'Todos',v=fVendedor.value||'Todos',d=fDia.value||'Todos';FILTERED=DATA.filter(x=>(s==='Todos'||x.supervisor===s)&&(v==='Todos'||x.vendedor===v)&&(d==='Todos'||x.dia===d));CLIENTS=uniqueClients(FILTERED);render()}
+function render(){let opp=CLIENTS.filter(x=>typeOf(x)==='ganado_no_usado'),cerca=CLIENTS.filter(x=>typeOf(x)==='cerca');kOpp.textContent=opp.length.toLocaleString('es-PE');kCerca.textContent=cerca.length.toLocaleString('es-PE');kClientes.textContent=CLIENTS.length.toLocaleString('es-PE');kPvta.textContent=money([...opp,...cerca].reduce((a,b)=>a+(b.pvta||0),0));renderRank('rankSupervisor','supervisor');renderRank('rankVendedor','vendedor');renderClients();renderWhats()}
+function renderRank(id,key){let m={};CLIENTS.forEach(x=>{String(x[key]||'Sin dato').split(',').map(z=>z.trim()).filter(Boolean).forEach(k=>{if(!m[k])m[k]={n:k,opp:0,cerca:0,pvta:0,total:0};let t=typeOf(x);m[k].total++;if(t==='ganado_no_usado')m[k].opp++;if(t==='cerca')m[k].cerca++;if(t==='ganado_no_usado'||t==='cerca')m[k].pvta+=x.pvta||0})});document.getElementById(id).innerHTML=Object.values(m).sort((a,b)=>b.opp-a.opp||b.cerca-a.cerca).slice(0,12).map(x=>`<div class="rankItem"><div><div class="rankName">${x.n}</div><div class="rankMeta">🔥 ${x.opp} | ⚠️ ${x.cerca} | ${money(x.pvta)}</div></div><div class="rankNum">${x.total}</div></div>`).join('')}
+function focusType(t){CURRENT_TYPE=t;LIMIT=20;setTab('clientes',document.querySelectorAll('.tab')[1]);renderClients()}
+function renderClients(){let arr=CLIENTS.filter(x=>CURRENT_TYPE==='total'||typeOf(x)===CURRENT_TYPE).sort((a,b)=>(b.pvta-a.pvta)||(b.gap-a.gap));clientTitle.textContent=CURRENT_TYPE==='ganado_no_usado'?'🔥 Ganó y no usó V':CURRENT_TYPE==='cerca'?'⚠️ Cerca de ganar':'Oportunidades';clientCards.innerHTML=arr.slice(0,LIMIT).map(card).join('')||'<div class="status">Sin clientes para este filtro.</div>'}
+function card(x){let t=typeOf(x),b=t==='ganado_no_usado'?'b-red':t==='cerca'?'b-orange':t==='ganado_usado'?'b-green':'b-blue';return`<div class="client"><div class="clientTop"><div><div class="code">${x.cliente}</div><div class="name">${x.nombre}</div></div><span class="badge ${b}">${t.replaceAll('_',' ')}</span></div><div class="meta">👤 ${x.vendedor||'-'} | 📅 ${x.dia||'-'}</div><div class="nums"><div class="num"><small>Cuota</small><b>${money(x.cuota)}</b></div><div class="num"><small>Avance</small><b>${money(x.avance)}</b></div><div class="num"><small>Gap</small><b>${money(x.gap)}</b></div><div class="num"><small>PVTA</small><b>${money(x.pvta)}</b></div></div><button class="btn copy" onclick="copyClient('${x.cliente}')">Copiar WhatsApp</button></div>`}
+function showMore(){LIMIT+=20;renderClients()}
+function clientText(x){return`📌 ${x.cliente} - ${x.nombre}\nVend: ${x.vendedor||'-'} | Día: ${x.dia||'-'}\nCuota: ${money(x.cuota)} | Avance: ${money(x.avance)}\nGap: ${money(x.gap)} | PVTA: ${money(x.pvta)}\nEstado: ${typeOf(x).replaceAll('_',' ')}`}
+async function copyClient(cod){let x=CLIENTS.find(c=>c.cliente===cod);let txt=clientText(x);try{await navigator.clipboard.writeText(txt);alert('Copiado para WhatsApp')}catch(e){prompt('Copia:',txt)}}
+function renderWhats(){let arr=CLIENTS.filter(x=>typeOf(x)==='ganado_no_usado'||typeOf(x)==='cerca').slice(0,12);whatsText.textContent='🔥 Oportunidades Rebates\n\n'+arr.map(clientText).join('\n\n')+'\n\nTotal oportunidades: '+arr.length}
+async function copyWhats(){try{await navigator.clipboard.writeText(whatsText.textContent);alert('Resumen copiado')}catch(e){prompt('Copia:',whatsText.textContent)}}
+function setTab(id,el){document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active')}
+async function loadData(){status.textContent='Cargando reembolsos.csv...';const res=await fetch('reembolsos.csv?v='+Date.now(),{cache:'no-store'});const txt=await res.text();let p=Papa.parse(txt,{header:true,skipEmptyLines:true,delimitersToGuess:[',',';','\t','|']});if(p.meta.fields.length<=1)p=Papa.parse(txt,{header:true,skipEmptyLines:true,delimiter:';'});DATA=p.data.map(mapRow).filter(x=>x.cliente||x.nombre);status.textContent=`Actualizado: ${DATA.length.toLocaleString('es-PE')} filas`;fillSelect('fSupervisor',DATA.map(x=>x.supervisor));fillSelect('fVendedor',DATA.map(x=>x.vendedor));fillSelect('fDia',DATA.map(x=>x.dia));applyFilters()}
+
+</script>
+
+<script>
+/* ===== AJUSTES KPI / RANKING / WHATSAPP - VERSION SUPERVISOR ===== */
+function isOppType(t){ return t==='ganado_no_usado' || t==='cerca'; }
+function solesOportunidad(x){
+  const t = typeOf(x);
+  if(t==='cerca' || t==='lejos') return Math.max(0, Number(x.gap||0));
+  if(t==='ganado_no_usado') return Math.max(0, Number(x.pvta||0));
+  return 0;
+}
+function pvtaOportunidad(x){
+  const t = typeOf(x);
+  if(t==='ganado_no_usado' || t==='cerca') return Math.max(0, Number(x.pvta||0));
+  return 0;
+}
+function cerradoHoy(x){ return won(x); }
+
+function render(){
+  let opp = CLIENTS.filter(x=>typeOf(x)==='ganado_no_usado');
+  let cerca = CLIENTS.filter(x=>typeOf(x)==='cerca');
+  let oportunidades = CLIENTS.filter(x=>isOppType(typeOf(x)));
+  const solesOpp = oportunidades.reduce((a,b)=>a+solesOportunidad(b),0);
+  const pvtaOpp = oportunidades.reduce((a,b)=>a+pvtaOportunidad(b),0);
+
+  kOpp.textContent = opp.length.toLocaleString('es-PE');
+  kCerca.textContent = cerca.length.toLocaleString('es-PE');
+  kClientes.textContent = CLIENTS.length.toLocaleString('es-PE');
+
+  const kSoles = document.getElementById('kSolesOpp');
+  if(kSoles) kSoles.textContent = money(solesOpp);
+  const kPv = document.getElementById('kPvta');
+  if(kPv) kPv.textContent = 'PVTA oportunidad: ' + money(pvtaOpp);
+  const kCliSub = document.getElementById('kClientesSub');
+  if(kCliSub) kCliSub.textContent = 'Oportunidad: ' + money(solesOpp);
+
+  renderRank('rankSupervisor','supervisor');
+  renderRank('rankVendedor','vendedor');
+  renderClients();
+  renderWhats();
+}
+function renderRank(id,key){
+  let m={};
+  CLIENTS.forEach(x=>{
+    String(x[key]||'Sin dato').split(',').map(z=>z.trim()).filter(Boolean).forEach(k=>{
+      if(!m[k]) m[k]={n:k,opp:0,cerca:0,pvta:0,suf:0,total:0,cerrados:0};
+      let t=typeOf(x);
+      m[k].total++;
+      if(cerradoHoy(x)) m[k].cerrados++;
+      if(t==='ganado_no_usado') m[k].opp++;
+      if(t==='cerca') m[k].cerca++;
+      if(isOppType(t)){
+        m[k].suf += solesOportunidad(x);
+        m[k].pvta += pvtaOportunidad(x);
+      }
+    });
+  });
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = Object.values(m)
+    .sort((a,b)=>b.suf-a.suf || b.opp-a.opp || b.cerca-a.cerca)
+    .slice(0,12)
+    .map(x=>`<div class="rankItem">
+      <div>
+        <div class="rankName">${x.n}</div>
+        <div class="rankMeta">🔥 ${x.opp} | ⚠️ ${x.cerca} | ✅ cerraron ${x.cerrados}/${x.total}</div>
+        <div class="rankMeta">Suf: ${money(x.suf)} | PVTA: ${money(x.pvta)}</div>
+      </div>
+      <div class="rankNum">${x.total}</div>
+    </div>`).join('');
+}
+function renderWhats(){
+  const grupos = {};
+  CLIENTS.filter(x=>isOppType(typeOf(x))).forEach(x=>{
+    const vend = x.vendedor || 'Sin vendedor';
+    const estado = typeOf(x)==='ganado_no_usado' ? 'GANÓ Y NO USÓ V' : 'CERCA';
+    if(!grupos[vend]) grupos[vend] = {'GANÓ Y NO USÓ V':[], 'CERCA':[]};
+    grupos[vend][estado].push(x);
+  });
+
+  let txt = '🔥 OPORTUNIDADES REBATES\n';
+  txt += 'Soles oportunidad: ' + money(CLIENTS.filter(x=>isOppType(typeOf(x))).reduce((a,b)=>a+solesOportunidad(b),0)) + '\n';
+  txt += 'PVTA oportunidad: ' + money(CLIENTS.filter(x=>isOppType(typeOf(x))).reduce((a,b)=>a+pvtaOportunidad(b),0)) + '\n\n';
+
+  Object.keys(grupos).sort().slice(0,20).forEach(v=>{
+    txt += '👤 VENDEDOR ' + v + '\n';
+    ['GANÓ Y NO USÓ V','CERCA'].forEach(est=>{
+      const arr = grupos[v][est].sort((a,b)=>solesOportunidad(b)-solesOportunidad(a)).slice(0,8);
+      if(arr.length){
+        txt += '\n' + (est==='GANÓ Y NO USÓ V' ? '🔥 ' : '⚠️ ') + est + '\n';
+        arr.forEach(c=>{
+          txt += `${c.cliente} - ${c.nombre}\n`;
+          txt += `Suf: ${money(solesOportunidad(c))} | PVTA: ${money(pvtaOportunidad(c))} | Gap: ${money(c.gap)}\n`;
+        });
+      }
+    });
+    txt += '\n';
+  });
+  const el = document.getElementById('whatsText');
+  if(el) el.textContent = txt.trim();
+}
+function clientText(x){
+  return `📌 ${x.cliente} - ${x.nombre}\nVend: ${x.vendedor||'-'} | Día: ${x.dia||'-'}\nCuota: ${money(x.cuota)} | Avance: ${money(x.avance)}\nSuf: ${money(solesOportunidad(x))} | PVTA: ${money(pvtaOportunidad(x))}\nGap: ${money(x.gap)}\nEstado: ${typeOf(x).replaceAll('_',' ')}`;
+}
+/* ===== FIN AJUSTES ===== */
+</script>
+
+
+<script>
+/* ===== AJUSTES 2: CERRAR CON PVTA, CERCA >=60%, WHATSAPP LIMPIO ===== */
+function isOppType(t){ return t==='ganado_no_usado' || t==='cerca'; }
+
+function sufCliente(x){
+  return Math.max(0, Number(x.gap||0));
+}
+
+function solesOportunidad(x){
+  // En ficha clientes únicos: oportunidad de soles = todo el gap pendiente.
+  return sufCliente(x);
+}
+
+function pvtaOportunidad(x){
+  const t = typeOf(x);
+  if(t==='ganado_no_usado' || t==='cerca') return Math.max(0, Number(x.pvta||0));
+  return 0;
+}
+
+function cerradoHoy(x){
+  // Cerró hoy o con preventa: si ya ganó, o si la PVTA cubre la suficiencia pendiente.
+  if(won(x)) return true;
+  const suf = sufCliente(x);
+  return suf>0 && Number(x.pvta||0) >= suf;
+}
+
+function typeOf(x){
+  const w = won(x);
+  const u = x.uso_v==='SI';
+  if(w && !u) return 'ganado_no_usado';
+  if(w && u) return 'ganado_usado';
+  // Default cerca: clientes que aún no llegaron y están >=60% avance.
+  if(!w && Number(x.pct||0) >= 0.60) return 'cerca';
+  return 'lejos';
+}
+
+function nombreCorto(nombre){
+  const clean = String(nombre||'').replace(/[.,]/g,' ').replace(/\s+/g,' ').trim();
+  if(!clean) return '';
+  const parts = clean.split(' ').filter(Boolean);
+  // quedarse con 2 apellidos / primeras dos palabras del nombre comercial.
+  return parts.slice(0,2).join(' ');
+}
+
+function render(){
+  let opp = CLIENTS.filter(x=>typeOf(x)==='ganado_no_usado');
+  let cerca = CLIENTS.filter(x=>typeOf(x)==='cerca');
+  let oportunidades = CLIENTS.filter(x=>isOppType(typeOf(x)));
+  const solesOpp = CLIENTS.reduce((a,b)=>a+solesOportunidad(b),0); // todo el gap
+  const pvtaOpp = oportunidades.reduce((a,b)=>a+pvtaOportunidad(b),0);
+
+  kOpp.textContent = opp.length.toLocaleString('es-PE');
+  kCerca.textContent = cerca.length.toLocaleString('es-PE');
+  kClientes.textContent = CLIENTS.length.toLocaleString('es-PE');
+
+  const kSoles = document.getElementById('kSolesOpp');
+  if(kSoles) kSoles.textContent = money(solesOpp);
+  const kPv = document.getElementById('kPvta');
+  if(kPv) kPv.textContent = 'PVTA oportunidad: ' + money(pvtaOpp);
+  const kCliSub = document.getElementById('kClientesSub');
+  if(kCliSub) kCliSub.textContent = 'Oportunidad total gap: ' + money(solesOpp);
+
+  renderRank('rankSupervisor','supervisor');
+  renderRank('rankVendedor','vendedor');
+  renderClients();
+  renderWhats();
+}
+
+function renderRank(id,key){
+  let m={};
+  CLIENTS.forEach(x=>{
+    String(x[key]||'Sin dato').split(',').map(z=>z.trim()).filter(Boolean).forEach(k=>{
+      if(!m[k]) m[k]={n:k,opp:0,cerca:0,pvta:0,suf:0,total:0,cerrados:0};
+      let t=typeOf(x);
+      m[k].total++;
+      if(cerradoHoy(x)) m[k].cerrados++;
+      if(t==='ganado_no_usado') m[k].opp++;
+      if(t==='cerca') m[k].cerca++;
+      if(isOppType(t)){
+        m[k].suf += sufCliente(x);
+        m[k].pvta += pvtaOportunidad(x);
+      }
+    });
+  });
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = Object.values(m)
+    .sort((a,b)=>b.suf-a.suf || b.cerrados-a.cerrados || b.opp-a.opp || b.cerca-a.cerca)
+    .slice(0,12)
+    .map(x=>`<div class="rankItem">
+      <div>
+        <div class="rankName">${x.n}</div>
+        <div class="rankMeta">🔥 ${x.opp} | ⚠️ ${x.cerca} | ✅ cerraron hoy ${x.cerrados}/${x.total}</div>
+        <div class="rankMeta">Suf: ${money(x.suf)} | PVTA: ${money(x.pvta)}</div>
+      </div>
+      <div class="rankNum">${x.total}</div>
+    </div>`).join('');
+}
+
+function clientText(x){
+  const t = typeOf(x);
+  const llego = (t==='cerca' && cerradoHoy(x)) ? ' | LLEGÓ con PVTA' : '';
+  return `📌 ${x.cliente} - ${nombreCorto(x.nombre)}\nVend: ${x.vendedor||'-'} | Día: ${x.dia||'-'}\nSuf: ${money(sufCliente(x))} | PVTA: ${money(pvtaOportunidad(x))}${llego}\nEstado: ${t.replaceAll('_',' ')}`;
+}
+
+function renderWhats(){
+  const grupos = {};
+  CLIENTS.filter(x=>isOppType(typeOf(x))).forEach(x=>{
+    const vend = x.vendedor || 'Sin vendedor';
+    const estado = typeOf(x)==='ganado_no_usado' ? 'GANÓ Y NO USÓ V' : 'CERCA';
+    if(!grupos[vend]) grupos[vend] = {'GANÓ Y NO USÓ V':[], 'CERCA':[]};
+    grupos[vend][estado].push(x);
+  });
+
+  let txt = '🔥 OPORTUNIDADES REBATES\n';
+  txt += 'Soles oportunidad total gap: ' + money(CLIENTS.reduce((a,b)=>a+sufCliente(b),0)) + '\n';
+  txt += 'PVTA oportunidad: ' + money(CLIENTS.filter(x=>isOppType(typeOf(x))).reduce((a,b)=>a+pvtaOportunidad(b),0)) + '\n\n';
+
+  Object.keys(grupos).sort().slice(0,20).forEach(v=>{
+    txt += '👤 VENDEDOR ' + v + '\n';
+
+    ['GANÓ Y NO USÓ V','CERCA'].forEach(est=>{
+      const arr = grupos[v][est].sort((a,b)=>sufCliente(b)-sufCliente(a)).slice(0,8);
+      if(arr.length){
+        txt += '\n' + (est==='GANÓ Y NO USÓ V' ? '🔥 ' : '⚠️ ') + est + '\n';
+        arr.forEach(c=>{
+          const llego = (est==='CERCA' && cerradoHoy(c)) ? ' ✅ LLEGÓ' : '';
+          txt += `${c.cliente} - ${nombreCorto(c.nombre)}\n`;
+          txt += `Suf: ${money(sufCliente(c))} | PVTA: ${money(pvtaOportunidad(c))}${llego}\n`;
+        });
+      }
+    });
+    txt += '\n';
+  });
+
+  const el = document.getElementById('whatsText');
+  if(el) el.textContent = txt.trim();
+}
+/* ===== FIN AJUSTES 2 ===== */
+</script>
+
+
+<script>
+/* ===== AJUSTES 3: PESTAÑA GESTIÓN DEL DÍA ===== */
+function esCerradoInicial(x){ return won(x); }
+function esOportunidadGeneral(x){ return !esCerradoInicial(x) && Number(x.gap||0)>0; }
+function esOportunidadCerca(x){ return esOportunidadGeneral(x) && Number(x.pct||0)>=0.60; }
+function cerroHoyReal(x){ return esOportunidadGeneral(x) && Number(x.pvta||0) >= Number(x.gap||0); }
+function rate(cerrados,total){ return total>0 ? cerrados/total : 0; }
+function clsBar(r){ if(r>=0.60) return 'good'; if(r>=0.30) return 'mid'; return ''; }
+
+function renderGestionDia(){
+  const m = {};
+  CLIENTS.forEach(x=>{
+    String(x.vendedor||'Sin vendedor').split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>{
+      if(!m[v]) m[v]={vendedor:v,cerca:0,general:0,cerrCerca:0,cerrGeneral:0,pvta:0,suf:0};
+      if(esOportunidadCerca(x)){
+        m[v].cerca++;
+        m[v].suf += Number(x.gap||0);
+        m[v].pvta += Number(x.pvta||0);
+        if(cerroHoyReal(x)) m[v].cerrCerca++;
+      }
+      if(esOportunidadGeneral(x)){
+        m[v].general++;
+        if(cerroHoyReal(x)) m[v].cerrGeneral++;
+      }
+    });
+  });
+
+  const rows = Object.values(m)
+    .filter(x=>x.general>0 || x.cerca>0)
+    .sort((a,b)=>rate(b.cerrCerca,b.cerca)-rate(a.cerrCerca,a.cerca) || b.cerrGeneral-a.cerrGeneral)
+    .slice(0,40);
+
+  const el = document.getElementById('gestionList');
+  if(!el) return;
+
+  el.innerHTML = rows.map(x=>{
+    const rC = rate(x.cerrCerca,x.cerca);
+    const rG = rate(x.cerrGeneral,x.general);
+    return `<div class="dayCard">
+      <div class="dayTop">
+        <div>
+          <div class="daySeller">${x.vendedor}</div>
+          <div class="dayMeta">Cerca: ${x.cerrCerca}/${x.cerca} | General: ${x.cerrGeneral}/${x.general}</div>
+        </div>
+        <div class="rankNum">${Math.round(rC*100)}%</div>
+      </div>
+      <div class="bars2">
+        <div class="barBox">
+          <div class="barTitle"><span>CERCA</span><span>${x.cerrCerca}/${x.cerca} · ${Math.round(rC*100)}%</span></div>
+          <div class="track"><div class="fill ${clsBar(rC)}" style="width:${Math.min(100,Math.round(rC*100))}%"></div></div>
+        </div>
+        <div class="barBox">
+          <div class="barTitle"><span>GENERAL</span><span>${x.cerrGeneral}/${x.general} · ${Math.round(rG*100)}%</span></div>
+          <div class="track"><div class="fill ${clsBar(rG)}" style="width:${Math.min(100,Math.round(rG*100))}%"></div></div>
+        </div>
+      </div>
+      <div class="dayMoney">Suf cerca: ${money(x.suf)} | PVTA cerca: ${money(x.pvta)}</div>
+    </div>`;
+  }).join('') || '<div class="status">Sin oportunidades para mostrar.</div>';
+}
+function cerradoHoy(x){ return cerroHoyReal(x); }
+
+const renderPrevGestion = render;
+render = function(){
+  renderPrevGestion();
+  renderGestionDia();
+};
+/* ===== FIN AJUSTES 3 ===== */
+</script>
+
+<script>
+/* ===== PATCH CARGA ROBUSTA BORRADOR SUPERVISOR ===== */
+const $id = (id) => document.getElementById(id);
+
+function getVal(id){
+  const el = $id(id);
+  return el ? (el.value || 'Todos') : 'Todos';
+}
+function setTxt(id, txt){
+  const el = $id(id);
+  if(el) el.textContent = txt;
+}
+function fillSelect2(id, vals){
+  const el = $id(id);
+  if(!el) return;
+  const cur = el.value || 'Todos';
+  const arr = ['Todos', ...Array.from(new Set((vals||[]).map(x=>String(x||'').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'))];
+  el.innerHTML = arr.map(x=>`<option value="${String(x).replaceAll('"','&quot;')}">${x}</option>`).join('');
+  el.value = arr.includes(cur) ? cur : 'Todos';
+}
+function applyFilters2(){
+  const s = getVal('fSupervisor');
+  const v = getVal('fVendedor');
+  const d = getVal('fDia');
+
+  FILTERED = DATA.filter(x =>
+    (s==='Todos' || x.supervisor===s) &&
+    (v==='Todos' || x.vendedor===v) &&
+    (d==='Todos' || x.dia===d)
+  );
+
+  CLIENTS = uniqueClients(FILTERED);
+  render();
+}
+async function loadData2(){
+  try{
+    setTxt('status','Cargando reembolsos.csv...');
+    const res = await fetch('reembolsos.csv?v=' + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('No se encontró reembolsos.csv. Código ' + res.status);
+
+    const txt = await res.text();
+    let p = Papa.parse(txt, {header:true, skipEmptyLines:true, delimitersToGuess:[',',';','\t','|']});
+    if(p.meta && p.meta.fields && p.meta.fields.length <= 1){
+      p = Papa.parse(txt, {header:true, skipEmptyLines:true, delimiter:';'});
+    }
+
+    const fields = (p.meta && p.meta.fields) ? p.meta.fields : [];
+    DATA = p.data.map(mapRow).filter(x => x.cliente || x.nombre);
+
+    if(!DATA.length){
+      setTxt('status','CSV leído, pero no se reconocen clientes. Columnas: ' + fields.slice(0,10).join(' | '));
+      return;
+    }
+
+    setTxt('status',`Actualizado: ${DATA.length.toLocaleString('es-PE')} filas | Columnas: ${fields.slice(0,5).join(' | ')}`);
+
+    fillSelect2('fSupervisor', DATA.map(x=>x.supervisor));
+    fillSelect2('fVendedor', DATA.map(x=>x.vendedor));
+    fillSelect2('fDia', DATA.map(x=>x.dia));
+
+    applyFilters2();
+  }catch(e){
+    console.error(e);
+    setTxt('status','Error cargando datos: ' + e.message);
+  }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  ['fSupervisor','fVendedor','fDia'].forEach(id=>{
+    const el = $id(id);
+    if(el) el.addEventListener('change', applyFilters2);
+  });
+  window.loadData = loadData2;
+  window.applyFilters = applyFilters2;
+  loadData2();
+});
+/* ===== FIN PATCH ===== */
+</script>
+
+<script>
+/* ===== EXPORTAR GESTION DIA A WHATSAPP ===== */
+function emojiSemaforo(r){
+  if(r>=0.60) return '🟢';
+  if(r>=0.30) return '🟠';
+  return '🔴';
+}
+
+async function copyGestionDia(){
+  const m = {};
+
+  CLIENTS.forEach(x=>{
+    String(x.vendedor||'Sin vendedor')
+      .split(',')
+      .map(v=>v.trim())
+      .filter(Boolean)
+      .forEach(v=>{
+        if(!m[v]) m[v]={vendedor:v,cerca:0,general:0,cerrCerca:0,cerrGeneral:0};
+
+        if(esOportunidadCerca(x)){
+          m[v].cerca++;
+          if(cerroHoyReal(x)) m[v].cerrCerca++;
+        }
+
+        if(esOportunidadGeneral(x)){
+          m[v].general++;
+          if(cerroHoyReal(x)) m[v].cerrGeneral++;
+        }
+      });
+  });
+
+  const rows = Object.values(m)
+    .filter(x=>x.general>0 || x.cerca>0)
+    .sort((a,b)=>rate(b.cerrCerca,b.cerca)-rate(a.cerrCerca,a.cerca));
+
+  let txt = '📈 GESTIÓN DEL DÍA - REBATES\n\n';
+
+  rows.forEach(x=>{
+    const rC = rate(x.cerrCerca,x.cerca);
+    const rG = rate(x.cerrGeneral,x.general);
+    const emo = emojiSemaforo(rC);
+
+    txt += `${emo} ${x.vendedor}\n`;
+    txt += `CERCA: ${x.cerrCerca}/${x.cerca} = ${Math.round(rC*100)}%\n`;
+    txt += `GENERAL: ${x.cerrGeneral}/${x.general} = ${Math.round(rG*100)}%\n\n`;
+  });
+
+  try{
+    await navigator.clipboard.writeText(txt.trim());
+    alert('Gestión del día copiada');
+  }catch(e){
+    prompt('Copia:', txt.trim());
+  }
+}
+/* ===== FIN EXPORTAR GESTION DIA ===== */
+</script>
+
+</body></html>
