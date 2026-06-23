@@ -181,7 +181,7 @@ function renderWhats(){
   Object.keys(grupos).sort().slice(0,20).forEach(v=>{
     txt += '👤 VENDEDOR ' + v + '\n';
     ['GANÓ Y NO USÓ V','CERCA'].forEach(est=>{
-      const arr = grupos[v][est].sort((a,b)=>solesOportunidad(b)-solesOportunidad(a)).slice(0,8);
+      const arr = grupos[v][est].sort((a,b)=>solesOportunidad(b)-solesOportunidad(a));
       if(arr.length){
         txt += '\n' + (est==='GANÓ Y NO USÓ V' ? '🔥 ' : '⚠️ ') + est + '\n';
         arr.forEach(c=>{
@@ -324,7 +324,7 @@ function renderWhats(){
     txt += '👤 VENDEDOR ' + v + '\n';
 
     ['GANÓ Y NO USÓ V','CERCA'].forEach(est=>{
-      const arr = grupos[v][est].sort((a,b)=>sufCliente(b)-sufCliente(a)).slice(0,8);
+      const arr = grupos[v][est].sort((a,b)=>sufCliente(b)-sufCliente(a));
       if(arr.length){
         txt += '\n' + (est==='GANÓ Y NO USÓ V' ? '🔥 ' : '⚠️ ') + est + '\n';
         arr.forEach(c=>{
